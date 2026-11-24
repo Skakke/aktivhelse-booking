@@ -1,9 +1,9 @@
 {% set gc = c.gc %}
 <div class="done">
   <h2>Du er påmeldt!</h2>
-  <p><strong>{{ gc.name }}</strong>, {{ gc.starts_at | day }} kl. {{ gc.starts_at | clock }} på {{ gc.department.name }}.</p>
-  <p class="meta">Påmeldt som {{ booking.name }} ({{ booking.email }}). Du kan melde deg av under
-    <a href="/mine?email={{ booking.email | urlencode }}">Mine påmeldinger</a>.</p>
+  <p><strong>{{ gc.name }}</strong>, {{ gc.starts_at | day }} kl. {{ gc.starts_at | clock }} på {{ gc.department.name }}, {{ gc.room }}.</p>
+  <p class="meta">Påmeldt som {{ booking.name }} (medlemsnr. {{ booking.member_number }}). Du kan melde deg av under
+    <a href="/mine?member={{ booking.member_number | urlencode }}">Mine påmeldinger</a>.</p>
   <div class="buttons">
     <button type="button" onclick="this.closest('dialog').close()">Lukk</button>
   </div>

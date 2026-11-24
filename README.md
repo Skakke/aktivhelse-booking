@@ -20,7 +20,7 @@ eller `docker compose down`. Neste oppstart gir ferske testdata.
 | Side | Adresse |
 | --- | --- |
 | Timeplan og påmelding | <http://localhost:8000/> |
-| Mine påmeldinger (avmelding) | <http://localhost:8000/mine> – prøv `anne@example.no` |
+| Mine påmeldinger (avmelding) | <http://localhost:8000/mine> – prøv medlemsnummer `100003` |
 | Administrasjon | <http://localhost:8000/admin> |
 | API-dokumentasjon | <http://localhost:8000/docs> |
 
@@ -39,11 +39,13 @@ Testen `test_concurrent_bookings_never_overbook` sender 20 samtidige påmeldinge
 ### Manuell test
 
 1. Meld deg på en time. Antall ledige plasser går ned med én gang.
-2. Prøv å melde deg på samme time igjen med samme e-post. Det avvises.
-3. Send skjemaet med tomt navn eller ugyldig e-post. Du får norske feilmeldinger.
+2. Prøv å melde deg på samme time igjen med samme medlemsnummer. Det avvises.
+3. Send skjemaet med tomt navn eller ugyldig medlemsnummer. Du får norske feilmeldinger.
 4. Prøv timen merket «Fullt». Den har ingen påmeldingsknapp.
-5. Gå til «Mine påmeldinger», skriv inn e-posten din og meld deg av.
+5. Gå til «Mine påmeldinger», skriv inn medlemsnummeret ditt og meld deg av. Timer som starter om
+   under 2 timer kan ikke meldes av (avmeldingsfrist).
 6. Gå til «Admin», opprett en ny time og se at den dukker opp i timeplanen.
+7. Åpne en time i «Admin» og meld på et medlem som ansatt.
 
 ## Teknologi
 
@@ -62,7 +64,13 @@ Begrunnelsen for valgene står i kravspesifikasjonen.
 Ved påmelding låses raden for timen med `SELECT … FOR UPDATE` før ledige plasser telles
 (`app/services.py`, funksjonen `book`). Kommer to påmeldinger på siste plass samtidig, må den
 andre vente til den første er ferdig, og ser da at timen er full. En unik nøkkel på
-(time, e-post) i databasen hindrer i tillegg dobbeltbooking.
+(time, medlemsnummer) i databasen hindrer i tillegg dobbeltpåmelding.
+
+## Innstillinger
+
+| Miljøvariabel | Standard | Betydning |
+| --- | --- | --- |
+| `CANCEL_DEADLINE_HOURS` | `2` | Hvor mange timer før start medlemmer kan melde seg av |
 
 ## Prosjektstruktur
 
@@ -79,6 +87,7 @@ migrations/        databasemigreringer (Alembic)
 tests/             automatiske tester
 compose.yaml       oppstart for demo/innlevering (uten lagring)
 compose.dev.yaml   tillegg for utvikling (lagring på disk, auto-reload)
+docs/              kundemøte og annen dokumentasjon
 ```
 
 ## Utvikling
@@ -100,5 +109,6 @@ docker compose exec app alembic revision --autogenerate -m "beskrivelse"
 
 ## Avgrensning
 
-Prototypen har ikke innlogging, betaling, e-post/SMS-varsler eller integrasjon mot medlemssystem.
+Prototypen har ikke innlogging, betaling, venteliste, e-post/SMS-varsler eller integrasjon mot
+medlemssystem. Medlemsnummer antas å være 4–10 siffer og sjekkes ikke mot et medlemsregister.
 Se kravspesifikasjonen for detaljer.

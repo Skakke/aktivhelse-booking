@@ -15,19 +15,20 @@ from app.models import Booking, Department, GroupClass
 
 DEPARTMENTS = ["Sentrum", "Nord", "Sør"]
 
-# (navn, instruktør, avdeling, klokkeslett, varighet, kapasitet)
+# (navn, instruktør, avdeling, sal, klokkeslett, varighet, kapasitet)
+# Kapasiteten varierer med salen og timetypen.
 WEEKLY = [
-    ("Spinning", "Kari Nordmann", "Sentrum", time(7, 0), 45, 20),
-    ("Yoga", "Ola Hansen", "Nord", time(12, 0), 60, 15),
-    ("Styrke", "Lise Berg", "Sør", time(17, 30), 60, 25),
-    ("Pilates", "Ingrid Lie", "Sentrum", time(18, 0), 50, 12),
-    ("Sirkeltrening", "Ahmed Ali", "Nord", time(19, 0), 45, 18),
+    ("Spinning", "Kari Nordmann", "Sentrum", "Sykkelsal", time(7, 0), 45, 20),
+    ("Yoga", "Ola Hansen", "Nord", "Sal 2", time(12, 0), 60, 15),
+    ("Styrke", "Lise Berg", "Sør", "Sal 1", time(17, 30), 60, 25),
+    ("Pilates", "Ingrid Lie", "Sentrum", "Sal 2", time(18, 0), 50, 12),
+    ("Sirkeltrening", "Ahmed Ali", "Nord", "Sal 1", time(19, 0), 45, 18),
 ]
 
+# (navn, medlemsnummer)
 MEMBERS = [
-    ("Anne Johansen", "anne@example.no"), ("Per Olsen", "per@example.no"),
-    ("Sara Nilsen", "sara@example.no"), ("Jonas Bakke", "jonas@example.no"),
-    ("Maria Dahl", "maria@example.no"), ("Erik Moen", "erik@example.no"),
+    ("Anne Johansen", "100001"), ("Per Olsen", "100002"), ("Sara Nilsen", "100003"),
+    ("Jonas Bakke", "100004"), ("Maria Dahl", "100005"), ("Erik Moen", "100006"),
 ]
 
 
@@ -42,11 +43,11 @@ def seed() -> bool:
         today = datetime.now(TZ).date()
         classes = []
         for day in range(7):
-            for i, (name, instructor, dep, t, dur, cap) in enumerate(WEEKLY):
+            for i, (name, instructor, dep, room, t, dur, cap) in enumerate(WEEKLY):
                 if (day + i) % 3 == 2:  # ikke alle timer hver dag
                     continue
                 classes.append(GroupClass(
-                    name=name, instructor=instructor, department=deps[dep],
+                    name=name, instructor=instructor, department=deps[dep], room=room,
                     starts_at=datetime.combine(today + timedelta(days=day), t, TZ),
                     duration_min=dur, capacity=cap,
                 ))
@@ -60,8 +61,8 @@ def seed() -> bool:
         # Noen påmeldinger på hver time.
         for n, gc in enumerate(classes):
             count = full.capacity if gc is full else n % 4
-            for name, email in MEMBERS[:count]:
-                db.add(Booking(group_class=gc, name=name, email=email))
+            for name, number in MEMBERS[:count]:
+                db.add(Booking(group_class=gc, name=name, member_number=number))
         db.commit()
         return True
 

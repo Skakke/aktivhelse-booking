@@ -2,17 +2,18 @@
 {% block title %}Mine påmeldinger{% endblock %}
 {% block content %}
 <h1>Mine påmeldinger</h1>
+<p class="lead">Du kan melde deg av fram til {{ deadline_hours }} timer før timen starter. Plassen blir da ledig for andre.</p>
 
 <form method="get" action="/mine" class="filters">
-  <label>E-post du meldte deg på med
-    <input name="email" type="email" value="{{ email }}" required>
+  <label>Medlemsnummer
+    <input name="member" value="{{ member }}" inputmode="numeric" required>
   </label>
   <button type="submit">Vis påmeldinger</button>
 </form>
 
 {% if msg %}<p class="notice">{{ msg }}</p>{% endif %}
 
-{% if email %}
+{% if member %}
   {% if bookings %}
   <ul class="classes">
     {% for b in bookings %}
@@ -24,20 +25,25 @@
       </div>
       <div class="what">
         <strong>{{ gc.name }}</strong>
-        <span class="meta">{{ gc.department.name }} · {{ gc.instructor }}</span>
+        <span class="meta">{{ gc.department.name }}, {{ gc.room }} · {{ gc.instructor }}</span>
+      </div>
+      <div class="spots">
+        {% if not can_cancel(gc) %}<span class="badge">Avmeldingsfristen er passert</span>{% endif %}
       </div>
       <div class="action">
+        {% if can_cancel(gc) %}
         <form method="post" action="/bookings/{{ b.id }}/cancel"
               onsubmit='return confirm({{ ("Melde deg av " ~ gc.name ~ "?") | tojson }})'>
-          <input type="hidden" name="email" value="{{ email }}">
+          <input type="hidden" name="member_number" value="{{ member }}">
           <button type="submit" class="danger">Meld av</button>
         </form>
+        {% endif %}
       </div>
     </li>
     {% endfor %}
   </ul>
   {% else %}
-  <p class="empty">Ingen kommende påmeldinger på {{ email }}.</p>
+  <p class="empty">Ingen kommende påmeldinger på medlemsnummer {{ member }}.</p>
   {% endif %}
 {% endif %}
 {% endblock %}

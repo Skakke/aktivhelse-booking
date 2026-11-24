@@ -63,9 +63,9 @@ def department(db):
 
 @pytest.fixture
 def make_class(db, department):
-    def _make(capacity=10, starts_in=timedelta(days=1), name="Spinning"):
+    def _make(capacity=10, starts_in=timedelta(days=1), name="Spinning", room="Sal 1"):
         gc = GroupClass(
-            name=name, instructor="Kari", department_id=department.id,
+            name=name, instructor="Kari", department_id=department.id, room=room,
             starts_at=datetime.now(TZ) + starts_in, duration_min=45, capacity=capacity,
         )
         db.add(gc)

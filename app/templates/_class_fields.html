@@ -18,6 +18,10 @@
     </select>
     {% if errors.department_id %}<small class="error">{{ errors.department_id }}</small>{% endif %}
   </label>
+  <label>Sal
+    <input name="room" value="{{ form.room or '' }}" placeholder="F.eks. Sal 1" required>
+    {% if errors.room %}<small class="error">{{ errors.room }}</small>{% endif %}
+  </label>
   <label>Starttidspunkt
     <input name="starts_at" type="datetime-local" value="{{ form.starts_at or '' }}" required>
     {% if errors.starts_at %}<small class="error">{{ errors.starts_at }}</small>{% endif %}

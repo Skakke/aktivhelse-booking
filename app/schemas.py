@@ -2,33 +2,32 @@
 
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+
+# Antatt format: 4–10 siffer. Justeres når kundens medlemsregister er kjent.
+MEMBER_NUMBER_PATTERN = r"^\d{4,10}$"
 
 
 class BookingIn(BaseModel):
     name: str = Field(min_length=2, max_length=100)
-    email: EmailStr
+    member_number: str = Field(pattern=MEMBER_NUMBER_PATTERN)
 
-    @field_validator("name", mode="before")
+    @field_validator("name", "member_number", mode="before")
     @classmethod
-    def strip_name(cls, v: str) -> str:
+    def strip(cls, v: str) -> str:
         return v.strip() if isinstance(v, str) else v
-
-    @field_validator("email", mode="after")
-    @classmethod
-    def lower_email(cls, v: str) -> str:
-        return v.lower()
 
 
 class ClassIn(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     instructor: str = Field(min_length=2, max_length=100)
     department_id: int
+    room: str = Field(min_length=1, max_length=50)
     starts_at: datetime
     duration_min: int = Field(ge=15, le=240)
     capacity: int = Field(ge=1, le=200)
 
-    @field_validator("name", "instructor", mode="before")
+    @field_validator("name", "instructor", "room", mode="before")
     @classmethod
     def strip(cls, v: str) -> str:
         return v.strip() if isinstance(v, str) else v
@@ -41,6 +40,7 @@ class ClassOut(BaseModel):
     name: str
     instructor: str
     department: str
+    room: str
     starts_at: datetime
     duration_min: int
     capacity: int
@@ -55,13 +55,14 @@ class BookingOut(BaseModel):
     id: int
     class_id: int
     name: str
-    email: str
+    member_number: str
 
 
 # Norske feilmeldinger for feltene brukerne fyller ut.
 _FIELD_NAMES = {
     "name": "Navn",
-    "email": "E-post",
+    "member_number": "Medlemsnummer",
+    "room": "Sal",
     "instructor": "Instruktør",
     "department_id": "Avdeling",
     "starts_at": "Starttidspunkt",
@@ -81,8 +82,8 @@ def norwegian_errors(exc: ValidationError) -> dict[str, str]:
         empty = err.get("input") in (None, "")
         if kind == "missing" or empty:
             msg = f"{label} må fylles ut."
-        elif field == "email":
-            msg = "Skriv inn en gyldig e-postadresse."
+        elif field == "member_number":
+            msg = "Medlemsnummer må være 4–10 siffer."
         elif kind == "string_too_short":
             msg = f"{label} må ha minst {ctx['min_length']} tegn."
         elif kind == "string_too_long":

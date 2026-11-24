@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import services
+from app.config import CANCEL_DEADLINE_HOURS
 from app.db import get_db
 from app.schemas import BookingIn, norwegian_errors
 from app.web import templates
@@ -65,9 +66,9 @@ def booking_form(request: Request, class_id: int, db: Session = Depends(get_db))
 
 
 @router.post("/classes/{class_id}/book", response_class=HTMLResponse)
-def submit_booking(request: Request, class_id: int, name: str = Form(""), email: str = Form(""),
-                   db: Session = Depends(get_db)):
-    form = {"name": name, "email": email}
+def submit_booking(request: Request, class_id: int, name: str = Form(""),
+                   member_number: str = Form(""), db: Session = Depends(get_db)):
+    form = {"name": name, "member_number": member_number}
     try:
         view = services.get_class(db, class_id)
     except services.NotFound as e:
@@ -94,18 +95,19 @@ def submit_booking(request: Request, class_id: int, name: str = Form(""), email:
 
 
 @router.get("/mine", response_class=HTMLResponse)
-def my_bookings(request: Request, email: str = "", msg: str = "", db: Session = Depends(get_db)):
-    bookings = services.bookings_for_email(db, email) if email.strip() else []
-    return templates.TemplateResponse(
-        request, "my_bookings.html", {"email": email.strip(), "bookings": bookings, "msg": msg}
-    )
+def my_bookings(request: Request, member: str = "", msg: str = "", db: Session = Depends(get_db)):
+    member = member.strip()
+    bookings = services.bookings_for_member(db, member) if member else []
+    ctx = {"member": member, "bookings": bookings, "msg": msg,
+           "can_cancel": services.can_cancel, "deadline_hours": CANCEL_DEADLINE_HOURS}
+    return templates.TemplateResponse(request, "my_bookings.html", ctx)
 
 
 @router.post("/bookings/{booking_id}/cancel")
-def cancel_booking(booking_id: int, email: str = Form(""), db: Session = Depends(get_db)):
+def cancel_booking(booking_id: int, member_number: str = Form(""), db: Session = Depends(get_db)):
     try:
-        services.cancel(db, booking_id, email)
+        services.cancel(db, booking_id, member_number)
         msg = "Du er meldt av timen."
     except services.BookingError as e:
         msg = str(e)
-    return RedirectResponse(f"/mine?{urlencode({'email': email, 'msg': msg})}", status_code=303)
+    return RedirectResponse(f"/mine?{urlencode({'member': member_number, 'msg': msg})}", status_code=303)

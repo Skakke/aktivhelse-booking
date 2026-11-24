@@ -6,14 +6,13 @@
 
 <form id="filters" class="filters"
       hx-get="/classes" hx-target="#class-list" hx-trigger="change" hx-push-url="false">
-  <label>Avdeling
-    <select name="department">
-      <option value="">Alle avdelinger</option>
-      {% for d in departments %}
-      <option value="{{ d.id }}" {% if d.id == selected_department %}selected{% endif %}>{{ d.name }}</option>
-      {% endfor %}
-    </select>
-  </label>
+  <fieldset class="tabs">
+    <legend>Avdeling</legend>
+    <label><input type="radio" name="department" value="" {% if not selected_department %}checked{% endif %}><span>Alle</span></label>
+    {% for d in departments %}
+    <label><input type="radio" name="department" value="{{ d.id }}" {% if d.id == selected_department %}checked{% endif %}><span>{{ d.name }}</span></label>
+    {% endfor %}
+  </fieldset>
   <label>Dag
     <select name="day">
       <option value="">Alle dager</option>

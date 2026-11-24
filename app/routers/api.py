@@ -19,13 +19,14 @@ _STATUS = {
     services.ClassFull: status.HTTP_409_CONFLICT,
     services.AlreadyBooked: status.HTTP_409_CONFLICT,
     services.ClassStarted: status.HTTP_409_CONFLICT,
+    services.CancelTooLate: status.HTTP_409_CONFLICT,
 }
 
 
 def _out(v: services.ClassView) -> ClassOut:
     gc = v.gc
     return ClassOut(
-        id=gc.id, name=gc.name, instructor=gc.instructor, department=gc.department.name,
+        id=gc.id, name=gc.name, instructor=gc.instructor, department=gc.department.name, room=gc.room,
         starts_at=gc.starts_at, duration_min=gc.duration_min, capacity=gc.capacity,
         booked=v.booked, available=v.available, full=v.full,
     )
@@ -61,9 +62,11 @@ def create_booking(class_id: int, data: BookingIn, db: Session = Depends(get_db)
 
 
 @router.delete("/bookings/{booking_id}", status_code=status.HTTP_204_NO_CONTENT,
-               summary="Meld av")
-def delete_booking(booking_id: int, email: str, db: Session = Depends(get_db)):
+               summary="Meld av",
+               responses={404: {"description": "Finnes ikke eller feil medlemsnummer"},
+                          409: {"description": "Avmeldingsfristen er passert"}})
+def delete_booking(booking_id: int, member_number: str, db: Session = Depends(get_db)):
     try:
-        services.cancel(db, booking_id, email)
+        services.cancel(db, booking_id, member_number)
     except services.BookingError as e:
         raise _http(e) from None

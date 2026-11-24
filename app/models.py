@@ -29,6 +29,7 @@ class GroupClass(Base):
     instructor: Mapped[str] = mapped_column(String(100))
     department_id: Mapped[int] = mapped_column(ForeignKey("departments.id"))
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    room: Mapped[str] = mapped_column(String(50))
     duration_min: Mapped[int]
     capacity: Mapped[int]
 
@@ -40,13 +41,15 @@ class GroupClass(Base):
 
 class Booking(Base):
     __tablename__ = "bookings"
-    # Databasen selv hindrer at samme e-post meldes på samme time to ganger.
-    __table_args__ = (UniqueConstraint("class_id", "email", name="uq_booking_class_email"),)
+    # Databasen selv hindrer at samme medlem meldes på samme time to ganger.
+    __table_args__ = (
+        UniqueConstraint("class_id", "member_number", name="uq_booking_class_member"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     class_id: Mapped[int] = mapped_column(ForeignKey("group_classes.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(100))
-    email: Mapped[str] = mapped_column(String(254))
+    member_number: Mapped[str] = mapped_column(String(10), index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     group_class: Mapped[GroupClass] = relationship(back_populates="bookings")

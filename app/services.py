@@ -11,7 +11,7 @@ from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
-from app.config import TZ
+from app.config import CANCEL_DEADLINE_HOURS, TZ
 from app.models import Booking, Department, GroupClass
 from app.schemas import BookingIn, ClassIn
 
@@ -34,11 +34,18 @@ class ClassFull(BookingError):
 
 
 class AlreadyBooked(BookingError):
-    message = "Denne e-postadressen er allerede påmeldt timen."
+    message = "Dette medlemsnummeret er allerede påmeldt timen."
 
 
 class ClassStarted(BookingError):
     message = "Timen har allerede startet."
+
+
+class CancelTooLate(BookingError):
+    message = (
+        f"Avmeldingsfristen er {CANCEL_DEADLINE_HOURS} timer før timen starter. "
+        "Kontakt resepsjonen."
+    )
 
 
 class CapacityTooLow(BookingError):
@@ -67,6 +74,14 @@ class ClassView:
     @property
     def bookable(self) -> bool:
         return not self.full and not self.started
+
+
+def cancel_deadline(gc: GroupClass) -> datetime:
+    return gc.starts_at - timedelta(hours=CANCEL_DEADLINE_HOURS)
+
+
+def can_cancel(gc: GroupClass) -> bool:
+    return now() < cancel_deadline(gc)
 
 
 def now() -> datetime:
@@ -132,13 +147,15 @@ def book(db: Session, class_id: int, data: BookingIn) -> Booking:
         if gc.starts_at <= now():
             raise ClassStarted()
         exists = db.scalar(
-            select(Booking.id).where(Booking.class_id == class_id, Booking.email == data.email)
+            select(Booking.id).where(
+                Booking.class_id == class_id, Booking.member_number == data.member_number
+            )
         )
         if exists:
             raise AlreadyBooked()
         if _count(db, class_id) >= gc.capacity:
             raise ClassFull()
-        booking = Booking(class_id=class_id, name=data.name, email=data.email)
+        booking = Booking(class_id=class_id, name=data.name, member_number=data.member_number)
         db.add(booking)
         db.commit()
     except IntegrityError:
@@ -151,17 +168,19 @@ def book(db: Session, class_id: int, data: BookingIn) -> Booking:
     return booking
 
 
-def cancel(db: Session, booking_id: int, email: str) -> None:
-    """Melder av en påmelding. E-posten må stemme, så man ikke kan melde av andre."""
+def cancel(db: Session, booking_id: int, member_number: str) -> None:
+    """Medlemmet melder seg av. Medlemsnummeret må stemme, og fristen må ikke være passert."""
     booking = db.get(Booking, booking_id)
-    if booking is None or booking.email != email.strip().lower():
+    if booking is None or booking.member_number != member_number.strip():
         raise NotFound()
+    if not can_cancel(booking.group_class):
+        raise CancelTooLate()
     db.delete(booking)
     db.commit()
 
 
 def remove_booking(db: Session, booking_id: int) -> None:
-    """Ansatte kan fjerne en deltaker uten å oppgi e-post."""
+    """Ansatte kan fjerne en deltaker når som helst, uten medlemsnummer og frist."""
     booking = db.get(Booking, booking_id)
     if booking is None:
         raise NotFound()
@@ -169,11 +188,11 @@ def remove_booking(db: Session, booking_id: int) -> None:
     db.commit()
 
 
-def bookings_for_email(db: Session, email: str) -> list[Booking]:
+def bookings_for_member(db: Session, member_number: str) -> list[Booking]:
     stmt = (
         select(Booking)
         .join(Booking.group_class)
-        .where(Booking.email == email.strip().lower(), GroupClass.starts_at >= now())
+        .where(Booking.member_number == member_number.strip(), GroupClass.starts_at >= now())
         .options(joinedload(Booking.group_class).joinedload(GroupClass.department))
         .order_by(GroupClass.starts_at)
     )

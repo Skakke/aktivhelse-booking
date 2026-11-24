@@ -10,12 +10,12 @@ from sqlalchemy.orm import Session
 
 from app import services
 from app.db import get_db
-from app.schemas import ClassIn, norwegian_errors
+from app.schemas import BookingIn, ClassIn, norwegian_errors
 from app.web import fmt_input, templates
 
 router = APIRouter(prefix="/admin")
 
-FIELDS = ("name", "instructor", "department_id", "starts_at", "duration_min", "capacity")
+FIELDS = ("name", "instructor", "department_id", "room", "starts_at", "duration_min", "capacity")
 
 
 async def _form(request: Request) -> dict[str, str]:
@@ -33,18 +33,20 @@ def _admin_page(request: Request, db: Session, form: dict | None = None, errors:
     return templates.TemplateResponse(request, "admin.html", ctx, status_code=422 if errors else 200)
 
 
-def _class_page(request: Request, db: Session, class_id: int, form=None, errors=None, msg=""):
+def _class_page(request: Request, db: Session, class_id: int, form=None, errors=None, msg="",
+                add_form=None, add_errors=None):
     view = services.get_class(db, class_id)
     gc = view.gc
     if form is None:
         form = {
-            "name": gc.name, "instructor": gc.instructor, "department_id": str(gc.department_id),
+            "name": gc.name, "instructor": gc.instructor, "department_id": str(gc.department_id), "room": gc.room,
             "starts_at": fmt_input(gc.starts_at), "duration_min": str(gc.duration_min), "capacity": str(gc.capacity),
         }
     ctx = {"c": view, "departments": services.list_departments(db), "form": form,
-           "errors": errors or {}, "msg": msg}
+           "errors": errors or {}, "msg": msg,
+           "add_form": add_form or {}, "add_errors": add_errors or {}}
     return templates.TemplateResponse(request, "admin_class.html", ctx,
-                                      status_code=422 if errors else 200)
+                                      status_code=422 if errors or add_errors else 200)
 
 
 @router.get("", response_class=HTMLResponse)
@@ -93,6 +95,22 @@ def delete_class(class_id: int, db: Session = Depends(get_db)):
     except services.NotFound:
         pass
     return RedirectResponse("/admin", status_code=303)
+
+
+@router.post("/classes/{class_id}/bookings", response_class=HTMLResponse)
+async def add_participant(request: Request, class_id: int, db: Session = Depends(get_db)):
+    """Ansatte melder på et medlem, f.eks. når noen ringer resepsjonen."""
+    data = await request.form()
+    form = {f: str(data.get(f, "")).strip() for f in ("name", "member_number")}
+    try:
+        services.book(db, class_id, BookingIn(**form))
+    except ValidationError as e:
+        return _class_page(request, db, class_id, add_form=form, add_errors=norwegian_errors(e))
+    except services.NotFound:
+        return RedirectResponse("/admin", status_code=303)
+    except services.BookingError as e:
+        return _class_page(request, db, class_id, add_form=form, add_errors={"skjema": str(e)})
+    return RedirectResponse(f"/admin/classes/{class_id}?msg=Deltakeren+er+meldt+på.", status_code=303)
 
 
 @router.post("/classes/{class_id}/bookings/{booking_id}/delete")

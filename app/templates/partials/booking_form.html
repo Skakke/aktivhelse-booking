@@ -1,7 +1,7 @@
 {% set gc = c.gc %}
 <form hx-post="/classes/{{ gc.id }}/book" hx-target="#modal-body" novalidate>
   <h2>{{ gc.name }}</h2>
-  <p class="meta">{{ gc.starts_at | day }} kl. {{ gc.starts_at | clock }} · {{ gc.department.name }} · {{ c.available }} ledige plasser</p>
+  <p class="meta">{{ gc.starts_at | day }} kl. {{ gc.starts_at | clock }} · {{ gc.department.name }}, {{ gc.room }} · {{ c.available }} ledige plasser</p>
 
   {% if errors.skjema %}<p class="alert">{{ errors.skjema }}</p>{% endif %}
 
@@ -11,10 +11,10 @@
     {% if errors.name %}<small class="error">{{ errors.name }}</small>{% endif %}
   </label>
 
-  <label>E-post
-    <input name="email" type="email" value="{{ form.email or '' }}" autocomplete="email" required
-           {% if errors.email %}aria-invalid="true"{% endif %}>
-    {% if errors.email %}<small class="error">{{ errors.email }}</small>{% endif %}
+  <label>Medlemsnummer
+    <input name="member_number" value="{{ form.member_number or '' }}" inputmode="numeric"
+           pattern="[0-9]{4,10}" required {% if errors.member_number %}aria-invalid="true"{% endif %}>
+    {% if errors.member_number %}<small class="error">{{ errors.member_number }}</small>{% endif %}
   </label>
 
   <div class="buttons">

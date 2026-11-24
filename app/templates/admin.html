@@ -13,7 +13,7 @@
 
 <table class="admin-table">
   <thead>
-    <tr><th>Tid</th><th>Time</th><th>Avdeling</th><th>Instruktør</th><th>Påmeldt</th><th></th></tr>
+    <tr><th>Tid</th><th>Time</th><th>Avdeling / sal</th><th>Instruktør</th><th>Påmeldt</th><th></th></tr>
   </thead>
   <tbody>
     {% for c in classes %}
@@ -21,7 +21,7 @@
     <tr>
       <td>{{ gc.starts_at | day }} {{ gc.starts_at | clock }}</td>
       <td><a href="/admin/classes/{{ gc.id }}">{{ gc.name }}</a></td>
-      <td>{{ gc.department.name }}</td>
+      <td>{{ gc.department.name }}, {{ gc.room }}</td>
       <td>{{ gc.instructor }}</td>
       <td class="{% if c.full %}is-full{% endif %}">{{ c.booked }}/{{ gc.capacity }}</td>
       <td class="row-actions">
