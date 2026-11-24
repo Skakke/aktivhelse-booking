@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Mine påmeldinger{% endblock %}
+{% block content %}
+<h1>Mine påmeldinger</h1>
+
+<form method="get" action="/mine" class="filters">
+  <label>E-post du meldte deg på med
+    <input name="email" type="email" value="{{ email }}" required>
+  </label>
+  <button type="submit">Vis påmeldinger</button>
+</form>
+
+{% if msg %}<p class="notice">{{ msg }}</p>{% endif %}
+
+{% if email %}
+  {% if bookings %}
+  <ul class="classes">
+    {% for b in bookings %}
+    {% set gc = b.group_class %}
+    <li class="class-card">
+      <div class="when">
+        <span class="day">{{ gc.starts_at | day }}</span>
+        <span class="time">{{ gc.starts_at | clock }}</span>
+      </div>
+      <div class="what">
+        <strong>{{ gc.name }}</strong>
+        <span class="meta">{{ gc.department.name }} · {{ gc.instructor }}</span>
+      </div>
+      <div class="action">
+        <form method="post" action="/bookings/{{ b.id }}/cancel"
+              onsubmit='return confirm({{ ("Melde deg av " ~ gc.name ~ "?") | tojson }})'>
+          <input type="hidden" name="email" value="{{ email }}">
+          <button type="submit" class="danger">Meld av</button>
+        </form>
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Ingen kommende påmeldinger på {{ email }}.</p>
+  {% endif %}
+{% endif %}
+{% endblock %}

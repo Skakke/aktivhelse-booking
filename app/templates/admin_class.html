@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set gc = c.gc %}
+{% block title %}{{ gc.name }} · Admin{% endblock %}
+{% block content %}
+<p><a href="/admin">← Tilbake til oversikten</a></p>
+<h1>{{ gc.name }}</h1>
+<p class="lead">{{ gc.starts_at | day }} kl. {{ gc.starts_at | clock }} · {{ gc.department.name }} · {{ c.booked }} av {{ gc.capacity }} plasser tatt</p>
+
+{% if msg %}<p class="notice">{{ msg }}</p>{% endif %}
+
+<h2>Deltakere</h2>
+{% if gc.bookings %}
+<table class="admin-table">
+  <thead><tr><th>#</th><th>Navn</th><th>E-post</th><th>Påmeldt</th><th></th></tr></thead>
+  <tbody>
+    {% for b in gc.bookings %}
+    <tr>
+      <td>{{ loop.index }}</td>
+      <td>{{ b.name }}</td>
+      <td>{{ b.email }}</td>
+      <td>{{ b.created_at | day }} {{ b.created_at | clock }}</td>
+      <td class="row-actions">
+        <form method="post" action="/admin/classes/{{ gc.id }}/bookings/{{ b.id }}/delete"
+              onsubmit='return confirm({{ ("Fjerne " ~ b.name ~ " fra timen?") | tojson }})'>
+          <button type="submit" class="danger">Fjern</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="empty">Ingen påmeldte ennå.</p>
+{% endif %}
+
+<details class="panel" {% if errors %}open{% endif %}>
+  <summary>Endre time</summary>
+  <form method="post" action="/admin/classes/{{ gc.id }}" novalidate>
+    {% include "_class_fields.html" %}
+    <div class="buttons"><button type="submit">Lagre endringer</button></div>
+  </form>
+</details>
+{% endblock %}

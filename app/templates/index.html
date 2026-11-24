@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Timeplan{% endblock %}
+{% block content %}
+<h1>Gruppetimer</h1>
+<p class="lead">Velg en time og meld deg på. Ledige plasser oppdateres med en gang.</p>
+
+<form id="filters" class="filters"
+      hx-get="/classes" hx-target="#class-list" hx-trigger="change" hx-push-url="false">
+  <label>Avdeling
+    <select name="department">
+      <option value="">Alle avdelinger</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}" {% if d.id == selected_department %}selected{% endif %}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Dag
+    <select name="day">
+      <option value="">Alle dager</option>
+      {% for day in days %}
+      <option value="{{ day.isoformat() }}" {% if day == selected_day %}selected{% endif %}>{{ fmt_day(day) }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <noscript><button type="submit">Filtrer</button></noscript>
+</form>
+
+<div id="class-list"
+     hx-get="/classes" hx-trigger="classesChanged from:body" hx-include="#filters">
+  {% include "partials/class_list.html" %}
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Admin{% endblock %}
+{% block content %}
+<h1>Administrasjon</h1>
+
+<details class="panel" {% if errors %}open{% endif %}>
+  <summary>+ Ny gruppetime</summary>
+  <form method="post" action="/admin/classes" novalidate>
+    {% include "_class_fields.html" %}
+    <div class="buttons"><button type="submit">Opprett time</button></div>
+  </form>
+</details>
+
+<table class="admin-table">
+  <thead>
+    <tr><th>Tid</th><th>Time</th><th>Avdeling</th><th>Instruktør</th><th>Påmeldt</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for c in classes %}
+    {% set gc = c.gc %}
+    <tr>
+      <td>{{ gc.starts_at | day }} {{ gc.starts_at | clock }}</td>
+      <td><a href="/admin/classes/{{ gc.id }}">{{ gc.name }}</a></td>
+      <td>{{ gc.department.name }}</td>
+      <td>{{ gc.instructor }}</td>
+      <td class="{% if c.full %}is-full{% endif %}">{{ c.booked }}/{{ gc.capacity }}</td>
+      <td class="row-actions">
+        <a class="button secondary" href="/admin/classes/{{ gc.id }}">Deltakere</a>
+        <form method="post" action="/admin/classes/{{ gc.id }}/delete"
+              onsubmit='return confirm({{ ("Slette " ~ gc.name ~ " og alle påmeldinger?") | tojson }})'>
+          <button type="submit" class="danger">Slett</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="empty">Ingen kommende timer.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

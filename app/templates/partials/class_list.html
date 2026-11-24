@@ -1,0 +1,36 @@
+{% if not classes %}
+<p class="empty">Ingen timer passer filteret.</p>
+{% else %}
+<ul class="classes">
+  {% for c in classes %}
+  {% set gc = c.gc %}
+  <li class="class-card {% if not c.bookable %}is-disabled{% endif %}">
+    <div class="when">
+      <span class="day">{{ gc.starts_at | day }}</span>
+      <span class="time">{{ gc.starts_at | clock }}</span>
+    </div>
+    <div class="what">
+      <strong>{{ gc.name }}</strong>
+      <span class="meta">{{ gc.department.name }} · {{ gc.instructor }} · {{ gc.duration_min }} min</span>
+    </div>
+    <div class="spots">
+      {% if c.started %}
+        <span class="badge">Startet</span>
+      {% elif c.full %}
+        <span class="badge badge-full">Fullt</span>
+      {% else %}
+        <span class="badge badge-free">{{ c.available }} av {{ gc.capacity }} ledig</span>
+      {% endif %}
+      <meter min="0" max="{{ gc.capacity }}" value="{{ c.booked }}"
+             low="{{ (gc.capacity * 0.7) | int }}" high="{{ (gc.capacity * 0.9) | int }}"
+             optimum="0" aria-label="Belegg"></meter>
+    </div>
+    <div class="action">
+      {% if c.bookable %}
+      <button hx-get="/classes/{{ gc.id }}/book" hx-target="#modal-body">Meld på</button>
+      {% endif %}
+    </div>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}

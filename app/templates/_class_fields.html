@@ -1,0 +1,33 @@
+{# Felles skjemafelter for å opprette og endre en time. #}
+{% if errors.skjema %}<p class="alert">{{ errors.skjema }}</p>{% endif %}
+<div class="grid">
+  <label>Navn på time
+    <input name="name" value="{{ form.name or '' }}" placeholder="F.eks. Spinning" required>
+    {% if errors.name %}<small class="error">{{ errors.name }}</small>{% endif %}
+  </label>
+  <label>Instruktør
+    <input name="instructor" value="{{ form.instructor or '' }}" required>
+    {% if errors.instructor %}<small class="error">{{ errors.instructor }}</small>{% endif %}
+  </label>
+  <label>Avdeling
+    <select name="department_id" required>
+      <option value="">Velg …</option>
+      {% for d in departments %}
+      <option value="{{ d.id }}" {% if form.department_id == d.id|string %}selected{% endif %}>{{ d.name }}</option>
+      {% endfor %}
+    </select>
+    {% if errors.department_id %}<small class="error">{{ errors.department_id }}</small>{% endif %}
+  </label>
+  <label>Starttidspunkt
+    <input name="starts_at" type="datetime-local" value="{{ form.starts_at or '' }}" required>
+    {% if errors.starts_at %}<small class="error">{{ errors.starts_at }}</small>{% endif %}
+  </label>
+  <label>Varighet (min)
+    <input name="duration_min" type="number" min="15" max="240" step="5" value="{{ form.duration_min or '' }}" required>
+    {% if errors.duration_min %}<small class="error">{{ errors.duration_min }}</small>{% endif %}
+  </label>
+  <label>Kapasitet (plasser)
+    <input name="capacity" type="number" min="1" max="200" value="{{ form.capacity or '' }}" required>
+    {% if errors.capacity %}<small class="error">{{ errors.capacity }}</small>{% endif %}
+  </label>
+</div>

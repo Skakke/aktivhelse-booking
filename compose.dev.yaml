@@ -1,0 +1,19 @@
+# Utvikling: data lagres i ./data/postgres på maskinen, og koden lastes inn på nytt ved endringer.
+#   docker compose -f compose.yaml -f compose.dev.yaml up --build
+# Slett ./data/postgres for å starte med tom database.
+
+services:
+  db:
+    tmpfs: !reset []
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./data/postgres:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # så du kan koble til med f.eks. DBeaver eller psql
+
+  app:
+    volumes:
+      - ./app:/code/app
+      - ./migrations:/code/migrations
+      - ./tests:/code/tests
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

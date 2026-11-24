@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Gruppetimer{% endblock %} · AktivHelse</title>
+  <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+  <script src="{{ url_for('static', path='htmx.min.js') }}" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/">AktivHelse</a>
+    <nav>
+      <a href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Timeplan</a>
+      <a href="/mine" {% if request.url.path == '/mine' %}aria-current="page"{% endif %}>Mine påmeldinger</a>
+      <a href="/admin" {% if request.url.path.startswith('/admin') %}aria-current="page"{% endif %}>Admin</a>
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <dialog id="modal">
+    <div id="modal-body"></div>
+  </dialog>
+
+  <script>
+    // Åpner dialogen når HTMX har lagt inn innhold i den.
+    document.addEventListener("htmx:afterSwap", (e) => {
+      const modal = document.getElementById("modal");
+      if (e.detail.target.id === "modal-body" && !modal.open) modal.showModal();
+    });
+  </script>
+</body>
+</html>
