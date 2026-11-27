@@ -11,7 +11,7 @@
   </form>
 </details>
 
-<table class="admin-table">
+<table class="admin-table responsive">
   <thead>
     <tr><th>Tid</th><th>Time</th><th>Avdeling / sal</th><th>Instruktør</th><th>Påmeldt</th><th></th></tr>
   </thead>
@@ -19,11 +19,11 @@
     {% for c in classes %}
     {% set gc = c.gc %}
     <tr>
-      <td>{{ gc.starts_at | day }} {{ gc.starts_at | clock }}</td>
-      <td><a href="/admin/classes/{{ gc.id }}">{{ gc.name }}</a></td>
-      <td>{{ gc.department.name }}, {{ gc.room }}</td>
-      <td>{{ gc.instructor }}</td>
-      <td class="{% if c.full %}is-full{% endif %}">{{ c.booked }}/{{ gc.capacity }}</td>
+      <td data-label="Tid">{{ gc.starts_at | day }} {{ gc.starts_at | clock }}</td>
+      <td data-label="Time" class="cell-title"><a href="/admin/classes/{{ gc.id }}">{{ gc.name }}</a></td>
+      <td data-label="Sted">{{ gc.department.name }}, {{ gc.room }}</td>
+      <td data-label="Instruktør">{{ gc.instructor }}</td>
+      <td data-label="Påmeldt" class="{% if c.full %}is-full{% endif %}">{{ c.booked }}/{{ gc.capacity }}</td>
       <td class="row-actions">
         <a class="button secondary" href="/admin/classes/{{ gc.id }}">Deltakere</a>
         <form method="post" action="/admin/classes/{{ gc.id }}/delete"

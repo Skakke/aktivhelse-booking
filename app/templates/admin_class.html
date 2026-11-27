@@ -10,15 +10,15 @@
 
 <h2>Deltakere</h2>
 {% if gc.bookings %}
-<table class="admin-table">
+<table class="admin-table responsive">
   <thead><tr><th>#</th><th>Navn</th><th>Medlemsnr.</th><th>Påmeldt</th><th></th></tr></thead>
   <tbody>
     {% for b in gc.bookings %}
     <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ b.name }}</td>
-      <td>{{ b.member_number }}</td>
-      <td>{{ b.created_at | day }} {{ b.created_at | clock }}</td>
+      <td data-label="#" class="cell-index">{{ loop.index }}</td>
+      <td data-label="Navn" class="cell-title">{{ b.name }}</td>
+      <td data-label="Medlemsnr.">{{ b.member_number }}</td>
+      <td data-label="Påmeldt">{{ b.created_at | day }} {{ b.created_at | clock }}</td>
       <td class="row-actions">
         <form method="post" action="/admin/classes/{{ gc.id }}/bookings/{{ b.id }}/delete"
               onsubmit='return confirm({{ ("Fjerne " ~ b.name ~ " fra timen?") | tojson }})'>

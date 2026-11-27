@@ -118,3 +118,107 @@ dialog form { display: flex; flex-direction: column; gap: 0.8rem; }
 .tabs input:checked + span { background: var(--brand); border-color: var(--brand); color: #fff; }
 .tabs input:focus-visible + span { outline: 2px solid var(--brand-dark); outline-offset: 2px; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ------------------------------------------------------------------
+   Mobilvennlig: berøringsmål, iOS-zoom, safe-area, bottom sheet,
+   tabeller som kort og horisontalt rullende faner.
+   ------------------------------------------------------------------ */
+html { -webkit-text-size-adjust: 100%; }
+body { -webkit-tap-highlight-color: transparent; }
+
+/* 16px i skjemafelt hindrer at iOS Safari zoomer inn ved fokus. */
+input, select { font-size: 1rem; }
+button, .button { touch-action: manipulation; }
+@media (pointer: coarse), (max-width: 640px) {
+  input, select, button, .button { min-height: 44px; }
+  .topbar nav a { display: inline-flex; align-items: center; min-height: 44px; }
+}
+
+/* Toppmeny følger med og respekterer hakk/avrundede hjørner. */
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+main {
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+  padding-bottom: max(4rem, env(safe-area-inset-bottom));
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.5rem; }
+  main { padding-top: 1rem; }
+
+  /* Meny: merke over, lenker i én rullbar rad. */
+  .topbar { flex-direction: column; align-items: stretch; gap: 0; padding-top: 0.5rem; padding-bottom: 0; }
+  .topbar nav { gap: 1.25rem; overflow-x: auto; scrollbar-width: none; white-space: nowrap; }
+  .topbar nav::-webkit-scrollbar { display: none; }
+
+  /* Filtre stables og fyller bredden. */
+  .filters { flex-direction: column; align-items: stretch; gap: 0.75rem; }
+  .filters > label, .filters > button { width: 100%; }
+
+  /* Avdelingsfaner: én rad som kan sveipes, ikke mange linjer. */
+  .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -1rem; padding: 0 1rem 0.25rem; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs legend { float: left; width: 100%; }
+  .tabs label { flex: 0 0 auto; }
+  .tabs span { display: inline-flex; align-items: center; min-height: 44px; white-space: nowrap; }
+
+  /* Kort: litt luftigere, statuslinje og knapp under. */
+  .class-card { gap: 0.6rem 1rem; padding: 0.9rem; }
+  .action:empty { display: none; }
+  .action form, .action button { width: 100%; }
+
+  /* Dialog som «bottom sheet» – knappene innen rekkevidde for tommelen. */
+  dialog {
+    width: 100%; max-width: 100%; margin: auto 0 0; max-height: 90dvh; overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    padding: 1.25rem 1rem max(1.25rem, env(safe-area-inset-bottom));
+  }
+  dialog[open] { animation: sheet-up 0.2s ease-out; }
+  .buttons { flex-direction: column-reverse; }
+  .buttons button, .buttons .button { width: 100%; }
+
+  /* Admin-tabeller blir kort: én rad = ett kort, kolonnenavn som etikett. */
+  .admin-table.responsive, .admin-table.responsive tbody,
+  .admin-table.responsive tr, .admin-table.responsive td { display: block; width: 100%; }
+  .admin-table.responsive { border: none; background: none; }
+  .admin-table.responsive thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .admin-table.responsive tr {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 0.6rem 0.9rem; margin-bottom: 0.6rem;
+  }
+  .admin-table.responsive td {
+    display: flex; justify-content: space-between; gap: 1rem;
+    border: none; padding: 0.3rem 0; text-align: right;
+  }
+  .admin-table.responsive td[data-label]::before {
+    content: attr(data-label); color: var(--muted); font-size: 0.82rem; font-weight: 600; text-align: left;
+  }
+  .admin-table.responsive td.cell-title { font-size: 1.05rem; font-weight: 700; text-align: left; }
+  .admin-table.responsive td.cell-title::before, .admin-table.responsive td.cell-index { display: none; }
+  .admin-table.responsive td.empty { justify-content: center; }
+  .admin-table.responsive .row-actions {
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0.5rem;
+    padding-top: 0.6rem; margin-top: 0.3rem; border-top: 1px solid var(--line);
+  }
+  .admin-table.responsive .row-actions > * + * { margin-left: 0; }
+  .admin-table.responsive .row-actions form, .admin-table.responsive .row-actions button,
+  .admin-table.responsive .row-actions .button { width: 100%; text-align: center; font-size: 0.95rem; padding: 0.55rem; }
+}
+
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { dialog[open] { animation: none; } }
+
+/* Lenke-knapper og vanlige knapper får lik høyde og sentrert tekst. */
+.button { display: inline-flex; align-items: center; justify-content: center; }
+@media (max-width: 640px) {
+  .admin-table.responsive tr { display: flex; flex-direction: column; }
+  .admin-table.responsive td.cell-title { order: -1; }
+}
+@media (max-width: 640px) {
+  .admin-table.responsive .row-actions > *,
+  .admin-table.responsive .row-actions form button { height: 44px; }
+}
